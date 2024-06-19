@@ -148,8 +148,13 @@ resource "aws_vpc_peering_connection" "peer" {
   vpc_id        = aws_vpc.main.id
   peer_vpc_id   = aws_vpc.second.id
   peer_region   = "us-west-2"
+}
 
-  auto_accept = true
+// Accept Peering Connection
+resource "aws_vpc_peering_connection_accepter" "peer_accepter" {
+  vpc_peering_connection_id = aws_vpc_peering_connection.peer.id
+  auto_accept               = true
+  depends_on                = [aws_vpc_peering_connection.peer]
 }
 
 // Update route tables to enable communication between VPCs
