@@ -23,4 +23,8 @@ To run, you run terraform init then terraform apply to make the changes to AWS. 
 <li>Terraform state is stored locally by default. Other options are remote state storage options offered by AWS, or terraform provides Terraform cloud as a hosted solution meaning you don't have to manage state youself</li>
 <li>In this network, nodes in the same subnet can talk to eachother. The nodes in the public subnet can talk to the internet, the private subnet nodes can't directly, but can through the public subnet.</li>
 <li>The AWS credentials are stored in the config file</li>
+<li>A 2nd VPC was then created, and the two were peered together, meaning the nodes in the 1st can connect to nodes in the 2nd using private IP addresses, i.e. allowing communication as if they were on the same network. </li>
+<li>Terraform has modules, which let you implement a repeatable pattern with parameters. You can pass parameters to modules to customise the resources they create, which makes it easy to implement repeatable patterns.</li>
+<li>Deleting the destination of a route table entry means no traffic that was previously routed based on that entry will have a defined anymore so will be dropped causing network communication issues. Deleting just the destination will make the route table entry become invalid. 'terraform apply' will attempt to correct or remove the invalid entry.</li>
+<li>Drift detection is identifying changes in the infrastructure that were made outside terraform, which works by comparing the current state of your infrastructure with the actual live state.</li>
 </ul>
