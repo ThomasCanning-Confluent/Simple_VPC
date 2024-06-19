@@ -14,6 +14,7 @@
 </ul>
 
 <h2>VPC Talking points</h2>
+A linux based EC2 instance has been deployed to each private subnet (AMI ID=ami-0c36451c41e1eefd2). The region has been set to us-west-2. The instance type is t2.micro.
 <ul>
 <li>CIDR block = collection of IP addresses that share the same network prefix and number of bits</li>
 <li>Terraform, an infrastructure of code tool, can be used to make the VPC by writing declarative configuration files. It has the benefits of being able to manage infrastructure across different platforms using a single tool, and declaring infrastructure as code means it can be reused easily. </li>
