@@ -69,11 +69,20 @@ resource "aws_instance" "public_instances" {
   subnet_id     = aws_subnet.public_subnets[count.index].id
   vpc_security_group_ids = [aws_security_group.public_sg.id]  # Use security group ID(s) here
 
+  //This adds an encrypted EBS volume to the instance (gp2 is general purpose SSD, 4GB in size)
+  root_block_device {
+    volume_type           = "gp2"
+    volume_size           = 4
+    delete_on_termination = true
+    encrypted             = true  # Ensures the root EBS volume is encrypted
+  }
+
   tags = {
     Name = "PublicInstance-${count.index}"
   }
 }
 
+//Adds a bucket to the AWS account
 resource "aws_s3_bucket" "my_bucket" {
   bucket = "bucket-4324324"
 }
