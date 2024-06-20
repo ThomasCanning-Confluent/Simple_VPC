@@ -6,6 +6,10 @@ provider "aws" {
 resource "aws_vpc" "main" {
   #Customise the settings of a resurce within the block
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name="Simple VPC" #Tags can be used for different things, such as a name tag for identification
+  }
 }
 
 resource "aws_internet_gateway" "igw" {
@@ -15,9 +19,12 @@ resource "aws_internet_gateway" "igw" {
 resource "aws_subnet" "public_subnets" {
   count             = 3
   vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.${count.index}.0/24"
+  cidr_block        = "10.0.${count.index}.0/24"#Count index gives each of the (3) VPCs a different name
   map_public_ip_on_launch = true
-  availability_zone = element(data.aws_availability_zones.available.names, count.index)
+  availability_zone = element(data.aws_availability_zones.available.names, count.index)#This places each VPC in a different availability zone
+  tags = {
+    Name = "Public Subnet ${count.index + 1}"
+  }
 }
 
 resource "aws_subnet" "private_subnets" {
@@ -25,6 +32,9 @@ resource "aws_subnet" "private_subnets" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.${count.index + 3}.0/24"
   availability_zone = element(data.aws_availability_zones.available.names, count.index)
+  tags = {
+    Name = "Private Subnet ${count.index + 1}"
+  }
 }
 
 data "aws_availability_zones" "available" {}
