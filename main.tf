@@ -13,7 +13,10 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.main.id #This associates the internet gateway with the simple VPC
+  tags={
+    Name="Simple VPC Internet Gateway"
+  }
 }
 
 resource "aws_subnet" "public_subnets" {
@@ -44,10 +47,11 @@ resource "aws_route_table" "public_rt" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw.id
+    gateway_id = aws_internet_gateway.igw.id #This is what makes the public subnets public, by making use of the internet gateway we enable traffic from the internet to access the subnets
   }
 }
 
+#This associates the public subnets with the route table which enables internet access
 resource "aws_route_table_association" "public_assoc" {
   count          = 3
   subnet_id      = aws_subnet.public_subnets[count.index].id
