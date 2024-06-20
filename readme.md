@@ -32,3 +32,4 @@ To run, you run terraform init then terraform apply to make the changes to AWS. 
 <li>Drift detection is identifying changes in the infrastructure that were made outside terraform, which works by comparing the current state of your infrastructure with the actual live state.</li>
 </ul>
 3 versions have been made on different branches. main has 2 VPCs peered, task2 explores buckets and an EBS volume, and nodesInPrivateSubnet is the original VPC but with nodes in the private subnet instead of public.
+This website has been used as a reference: https://spacelift.io/blog/terraform-aws-vpc
