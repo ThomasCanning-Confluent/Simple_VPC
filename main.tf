@@ -6,6 +6,9 @@ provider "aws" {
 resource "aws_vpc" "main" {
   #Customise the settings of a resource within the block
   cidr_block = "10.0.0.0/16"
+  tags = {
+    Name = "VPC-tcanning"
+  }
 }
 
 resource "aws_internet_gateway" "igw" {
@@ -64,10 +67,11 @@ resource "aws_security_group" "public_sg" {
 
 resource "aws_instance" "public_instances" {
   count         = 1
-  ami           = "ami-0c36451c41e1eefd2"  # Replace with your AMI ID
+  ami           = "ami-0c36451c41e1eefd2"
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.public_subnets[count.index].id
   vpc_security_group_ids = [aws_security_group.public_sg.id]  # Use security group ID(s) here
+  key_name      = "tcanning-keypair"  // Add this line
 
   //This adds an encrypted EBS volume to the instance (gp2 is general purpose SSD, 4GB in size)
   root_block_device {
@@ -78,7 +82,7 @@ resource "aws_instance" "public_instances" {
   }
 
   tags = {
-    Name = "PublicInstance-${count.index}"
+    Name = "tcanninginstance-${count.index}"
   }
 }
 
