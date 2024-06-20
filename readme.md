@@ -17,9 +17,12 @@
 To run, you run terraform init then terraform apply to make the changes to AWS. Terraform destory deletes everything in config file (opposite of apply)
 .A linux based EC2 instance has been deployed to each private subnet (AMI ID=ami-0c36451c41e1eefd2). The region has been set to us-west-2. The instance type is t2.micro. §
 <ul>
+<li>A VPC is a private network that has subnets within it. VPC is placed in a region and each subnet is placed in an availability zone. Resoures within the VPC can communicate with eachother. Other services withing a vpc such as an internet gateway allow connections over the public internet, and can then keep other subnets private, adding a layer of security./<li>
 <li>CIDR block (Classless Inter-Domain Routing) = collection of IP addresses, defines the number of internal network addresses that may be used internally</li>
+<li>EC2 instances are what run the web application in the cloud</li>
 <li>Subnets are used for internally segregating resources contained in the VPC.</li>
 <li>VPCs span all the availability zones in a region (this case us-west)</li>
+<li>Each AWS region has multiple, isolated locations known as availability zones (AZ). AWS cloud spans 105 AZs</li>
 <li>Route tables define a default route that let components in the VPC communicate with eachother internally</li>
 <li>Terraform, an infrastructure as code tool that can provision resources in the cloud from declarative code, is used to make the VPC. Has the benefits of being able to manage infrastructure across different cloud platforms using a single tool, can be reused easily, is safer and predictable, and CI can be automated easier. </li>
 <li>The code has been stored on github in a private git repository. Git is a version control system that makes keeping history of changes, collaborating with other developers, and continuous integration easy. Git repositories can be hosted on platforms such as github which provides an interface and collaborative environment for managing repositories.</li>
