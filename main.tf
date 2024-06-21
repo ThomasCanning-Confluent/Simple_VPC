@@ -92,6 +92,8 @@ resource "aws_subnet" "public_subnets" {
   map_public_ip_on_launch = true
 
   #Specifies which availability zone the subnet is created in
+  #An availability zone can be thought of like a specific data centre
+  #AZs are isolated locations, so if 1 fails, the others are unaffected
   #Element function is used to loop through the list of availability zones and assign a different one to each subnet
   #If there are more subnets than availability zones, it will loop back to the start of the list
   availability_zone = element(data.aws_availability_zones.available.names, count.index)
