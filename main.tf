@@ -1,13 +1,19 @@
 provider "aws" {
-  region = "us-west-2"
+  region = "eu-west-2"
+}
+
+variable "owner" {
+  type        = string
+  default     = "Thomas Canning"
 }
 
 #Resources take a type as the 1st argument (corresponding to an AWS service) and a name to identify it as 2nd argument
 resource "aws_vpc" "main" {
   #Customise the settings of a resource within the block
-  cidr_block = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/24"
   tags = {
-    Name = "VPC-tcanning"
+    Name = "Bucket VPC"
+
   }
 }
 
