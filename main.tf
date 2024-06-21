@@ -116,13 +116,21 @@ resource "aws_instance" "public_instances" {
   }
 }
 
-
 resource "aws_vpc" "second" {
-  cidr_block = "10.1.0.0/16"
+  #This VPC uses a different CIDR block
+  #This is to ensure that the VPCs do not overlap
+  cidr_block = "10.1.0.0/24"
+  tags = {
+    Name  = "Second VPC"
+    Owner=var.owner
+  }
 }
 
 resource "aws_internet_gateway" "igw2" {
-  vpc_id = aws_vpc.second.id
+  tags = {
+    Name = "Second VPC internet gateway"
+    Owner=var.owner
+  }
 }
 
 resource "aws_subnet" "second_public_subnets" {
@@ -175,7 +183,7 @@ resource "aws_security_group" "second_public_sg" {
 
 resource "aws_instance" "second_public_instances" {
   count         = 3
-  ami           = "ami-0c36451c41e1eefd2"  # Replace with your AMI ID
+  ami           = "ami-0c36451c41e1eefd2"
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.second_public_subnets[count.index].id
   vpc_security_group_ids = [aws_security_group.second_public_sg.id]
@@ -185,29 +193,38 @@ resource "aws_instance" "second_public_instances" {
   }
 }
 
-// VPC Peering Connection to peer second VPC with first
+#A VPC peering connection enables traffic routing between two VPCs using private IP addresses.
+#Can be used for sharing resources between VPCs
+
 resource "aws_vpc_peering_connection" "peer" {
+  #vpc_id refers to the VPC initiating the peering connection
   vpc_id        = aws_vpc.main.id
+  #peer_vpc_id refers to the VPC accepting the peering connection
   peer_vpc_id   = aws_vpc.second.id
-  peer_region   = "us-west-2"
+  peer_region   = "eu-west-2"
 }
 
-// Accept Peering Connection
+#Accepter automatically accepts the peering connection
+#This means that the owner of the peer VPC does not have to manually accept the connection
+#An alternative is to require manual acceptance
 resource "aws_vpc_peering_connection_accepter" "peer_accepter" {
   vpc_peering_connection_id = aws_vpc_peering_connection.peer.id
   auto_accept               = true
+  #depends_on ensures accepter is created after the peering connection
   depends_on                = [aws_vpc_peering_connection.peer]
 }
 
-// Update route tables to enable communication between VPCs
-//The route table of first vpc is updated to route traffic to the 2nd vpc
+#Creates a route in the route table of the 1st VPC that directs traffic to the 2nd VPC via a peering connection
 resource "aws_route" "main_to_second" {
+  #This specifies routes will be added to the public route table of the 1st VPC
   route_table_id         = aws_route_table.public_rt.id
+  #Specifies the destination CIDR block as the CIDR block of the 2nd VPC
   destination_cidr_block = aws_vpc.second.cidr_block
+  #Associates this route with the peering connection created earlier
   vpc_peering_connection_id = aws_vpc_peering_connection.peer.id
 }
 
-//The route table of 2nd vpc is updated to route traffic to the 1st vpc
+#Route table of 2nd VPC is also updated to direct traffic to the 1st VPC via the peering connection
 resource "aws_route" "second_to_main" {
   route_table_id            = aws_route_table.second_public_rt.id
   destination_cidr_block    = aws_vpc.main.cidr_block
