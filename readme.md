@@ -1,7 +1,5 @@
 <h1>VPC with a bucket in AWS</h1>
 
-<h1>VPC with a Bucket in AWS</h1>
-
 This is a VPC with 1 public and private subnet, an internet gateway, and a bucket. 
 The bucket is used to store and retrieve data from the VPC. 
 The bucket is within the public subnet and can be accessed from the internet.
