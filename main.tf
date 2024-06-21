@@ -117,7 +117,6 @@ resource "aws_instance" "public_instances" {
 }
 
 
-#Adding a 2nd VPC with same layout
 resource "aws_vpc" "second" {
   cidr_block = "10.1.0.0/16"
 }
