@@ -9,3 +9,5 @@ S3 (Simple Storage Service) is an object storage service. This bucket can be use
 You can access the bucket using the AWS CLI, e.g. aws s3 cp file1.txt s3://bucket-tcanning/file1.txt.
 The bucket can also be accessed from the AWS Management Console.
 It can also be accessed with SSH, e.g. sh -i ~/.ssh/tcanning-keypair.pem ec2-user@x.x.x.x
+The VPC also includes an encrypted EBS volume that is attached to the EC2 instance in the private subnet.
+An ebs volume is a block storage device that can be attached to an EC2 instance.
