@@ -34,6 +34,8 @@ To run, you run terraform init then terraform apply to make the changes to AWS. 
 <li>Deleting the destination of a route table entry means no traffic that was previously routed based on that entry will have a defined anymore so will be dropped causing network communication issues. Deleting just the destination will make the route table entry become invalid. 'terraform apply' will attempt to correct or remove the invalid entry.</li>
 <li>Firewall uses ssh security group rules</li>
 <li>Drift detection is identifying changes in the infrastructure that were made outside terraform, which works by comparing the current state of your infrastructure with the actual live state.</li>
+<li>I added the files to the bucket 1st using the AWS GUI, and then using the AWS CLI command aws s3 cp file2.txt s3://bucket-tcanning/file2.txt
+<li>I was able to ssh into the VPC with the command ssh -i ~/.ssh/tcanning-keypair.pem ec2-user@52.27.198.210 and then upload files to the buckets with ssh</li>
 </ul>
 3 versions have been made on different branches. main has 2 VPCs peered, task2 explores buckets and an EBS volume, and nodesInPrivateSubnet is the original VPC but with nodes in the private subnet instead of public.
 This website has been used as a reference: https://spacelift.io/blog/terraform-aws-vpc
