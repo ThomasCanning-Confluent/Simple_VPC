@@ -15,7 +15,6 @@ variable "owner" {
 }
 
 variable "name"{
-    description = "The name of the resources"
     type        = string
     default     = "Simple VPC"
 
