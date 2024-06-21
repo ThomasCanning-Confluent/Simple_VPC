@@ -15,6 +15,13 @@ variable "owner" {
   default     = "Thomas Canning"
 }
 
+variable "name"{
+    description = "The name of the resources"
+    type        = string
+    default     = "Simple VPC"
+
+}
+
 #Resources take a type as the 1st argument (corresponding to an AWS service) and a name to identify it as 2nd argument
 #You then customise the settings of the resource within the block
 #Every resource in this file is associated with a VPC
@@ -41,7 +48,7 @@ resource "aws_vpc" "main" {
   #Project tag
   #Environment tag, e.g. dev, test, prod
   tags = {
-    Name="Simple VPC"
+    Name  = var.name
     Owner=var.owner
   }
 }
@@ -51,7 +58,7 @@ resource "aws_vpc" "main" {
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id #This associates the internet gateway with the VPC
   tags = {
-    Name        = "Simple VPC internet gateway"
+    Name = var.name + " internet gateway"
     Owner=var.owner
   }
 }
@@ -91,7 +98,7 @@ resource "aws_subnet" "public_subnets" {
   availability_zone = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "Simple VPC public subnet ${count.index + 1}"
+    Name = var.name + " public subnet ${count.index + 1}"
     Owner=var.owner
   }
 }
@@ -104,7 +111,7 @@ resource "aws_subnet" "private_subnets" {
   availability_zone = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "Simple VPC private subnet ${count.index + 1}"
+    Name = var.name+ " private subnet ${count.index + 1}"
     Owner=var.owner
   }
 }
@@ -124,7 +131,7 @@ resource "aws_route_table" "public_rt" {
   }
 
     tags = {
-        Name = "Simple VPC public route table"
+        Name = var.name+ " public route table"
         Owner=var.owner
     }
 }
@@ -137,7 +144,7 @@ resource "aws_route_table_association" "public_assoc" {
   route_table_id = aws_route_table.public_rt.id
 
     tags = {
-        Name = "Simple VPC public route table association ${count.index + 1}"
+        Name = var.name +" public route table association ${count.index + 1}"
         Owner=var.owner
     }
 }
@@ -173,7 +180,7 @@ resource "aws_security_group" "public_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = {
-    Name  = "Simple VPC public security group"
+    Name  = var.name+" public security group"
     Owner = var.owner
   }
 }
@@ -194,7 +201,7 @@ resource "aws_instance" "public_instances" {
   vpc_security_group_ids = [aws_security_group.public_sg.id]
 
   tags = {
-    Name = "Simple VPC public instance ${count.index + 1}"
+    Name = var.name+" public instance ${count.index + 1}"
     Owner=var.owner
   }
 }
