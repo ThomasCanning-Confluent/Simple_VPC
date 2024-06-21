@@ -3,7 +3,6 @@ provider "aws" {
 }
 
 variable "owner" {
-  description = "The owner of the resources"
   type        = string
   default     = "Thomas Canning"
 }
