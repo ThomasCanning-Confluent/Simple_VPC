@@ -10,7 +10,6 @@ provider "aws" {
 
 #Defining a owner variable that is used throughout the file in the tags
 variable "owner" {
-  description = "The owner of the resources"
   type        = string
   default     = "Thomas Canning"
 }
