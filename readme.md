@@ -16,7 +16,7 @@
 <h2>VPC Talking points</h2>
 To run, you run terraform init then terraform apply to make the changes to AWS. Terraform destory deletes everything in config file (opposite of apply).
 <ul>
-<li>A VPC is a private network that has subnets within it. VPC is placed in a region and each subnet is placed in an availability zone. Resoures within the VPC can communicate with eachother. Other services withing a vpc such as an internet gateway allow connections over the public internet, and can then keep other subnets private, adding a layer of security./<li>
+<li>A VPC is a private network that has subnets within it. VPC is placed in a region and each subnet is placed in an availability zone. Resoures within the VPC can communicate with eachother. Other services withing a vpc such as an internet gateway allow connections over the public internet, and can then keep other subnets private, adding a layer of security.<li>
 <li>CIDR block (Classless Inter-Domain Routing) = collection of IP addresses, defines the number of internal network addresses that may be used internally</li>
 <li>EC2 instances are what run the web application in the cloud</li>
 <li>Subnets are used for internally segregating resources contained in the VPC.</li>

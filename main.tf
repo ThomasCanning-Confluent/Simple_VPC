@@ -16,7 +16,6 @@ variable "owner" {
 }
 
 variable "name"{
-    description = "The name of the resources"
     type        = string
     default     = "Simple VPC"
 
@@ -127,7 +126,7 @@ resource "aws_route_table" "public_rt" {
 
   route {
     #CIDR block of 0.0.0.0/0 means all IP addresses are allowed (default gateway)
-    cidr_block = "0.0.0.0/0"
+    cidr_blocks = ["66.159.216.54/32", "2001:4860:7:633::fe/128"]
     #Connects the route table to the internet gateway
     gateway_id = aws_internet_gateway.igw.id
   }
