@@ -204,4 +204,3 @@ resource "aws_instance" "public_instances" {
   }
 }
 
-//EKS CLUSTER
