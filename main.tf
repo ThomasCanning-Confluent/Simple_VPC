@@ -5,7 +5,8 @@ provider "aws" {
   #There are currently 33 regions.
   #Its best to choose the region closest to the end users to reduce latency, or use multiple regions if global user base
   #Another factor is some regions are cheaper than others
-  region = "eu-west-2" #This is the London region
+  region = "us-west-2" #This is the London region
+  profile = "cc-devel-1/nonprod-administrator" #This is the profile name in the AWS credentials file
 }
 
 #Defining a owner variable that is used throughout the file in the tags
@@ -57,7 +58,7 @@ resource "aws_vpc" "main" {
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id #This associates the internet gateway with the VPC
   tags = {
-    Name = var.name + " internet gateway"
+    Name  = "${var.name} internet gateway" //The ${} syntax is used to interpolate variables
     Owner=var.owner
   }
 }
@@ -99,7 +100,7 @@ resource "aws_subnet" "public_subnets" {
   availability_zone = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = var.name + " public subnet ${count.index + 1}"
+    Name = "${var.name} + public subnet ${count.index + 1}"
     Owner=var.owner
   }
 }
@@ -112,7 +113,7 @@ resource "aws_subnet" "private_subnets" {
   availability_zone = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = var.name+ " private subnet ${count.index + 1}"
+    Name = "${var.name}+ private subnet ${count.index + 1}"
     Owner=var.owner
   }
 }
@@ -132,7 +133,7 @@ resource "aws_route_table" "public_rt" {
   }
 
     tags = {
-        Name = var.name+ " public route table"
+        Name = "${var.name} + public route table"
         Owner=var.owner
     }
 }
@@ -144,10 +145,7 @@ resource "aws_route_table_association" "public_assoc" {
   subnet_id      = aws_subnet.public_subnets[count.index].id
   route_table_id = aws_route_table.public_rt.id
 
-    tags = {
-        Name = var.name +" public route table association ${count.index + 1}"
-        Owner=var.owner
-    }
+  //route table association doesn't support tagging
 }
 
 #Security groups act as a firewall
@@ -169,7 +167,7 @@ resource "aws_security_group" "public_sg" {
     #CIDR block specifies the range of IP addresses that are allowed to access the instance
     #The two IPs provided are the IPv4 and IPv6 addresses of the VPN
     #This means only traffic from the VPN can access the instance
-    cidr_blocks = ["66.159.216.54/32", "2001:4860:7:633::fe/128"]
+    cidr_blocks = ["66.159.216.54/32"]
   }
 
   egress {
@@ -181,7 +179,7 @@ resource "aws_security_group" "public_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = {
-    Name  = var.name+" public security group"
+    Name  = "${var.name} public security group"
     Owner = var.owner
   }
 }
@@ -202,7 +200,7 @@ resource "aws_instance" "public_instances" {
   vpc_security_group_ids = [aws_security_group.public_sg.id]
 
   tags = {
-    Name = var.name+" public instance ${count.index + 1}"
+    Name = "${var.name}+ public instance ${count.index + 1}"
     Owner=var.owner
   }
 }
