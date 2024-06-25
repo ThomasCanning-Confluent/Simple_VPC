@@ -34,12 +34,12 @@ resource "aws_vpc" "main" {
   #This means 24 bits are used to identify the network
   #The remaining bits (32-n) are used for the host address
   #So increasing prefix size decreases the number of available IP addresses
-  #10.0.0.0/24 allows for 256 IP addresses
-  #The range starts at 10.0.0.0 and ends at 10.0.0.255
+  #10.0.0.0/16 allows for 65,536 IP addresses
+  #The range starts at 10.0.0.0 and ends at 10.0.255.255
   #The first and last IP addresses are reserved for the network address and broadcast address, giving 254 usable IP addresses
   #Use a smaller prefix size for bigger VPCs
 
-  cidr_block = "10.0.0.0/24"
+  cidr_block = "10.0.0.0/16"
   #Tags can be used for different things, such as:
   #Name tag for identification in the AWS console
   #Owner tag
@@ -84,7 +84,7 @@ resource "aws_subnet" "public_subnets" {
 
   #CIDR block specifies the range of internal IP addresses that can be used in the subnet.
   #Uses the count.index to create a unique CIDR block for each subnet.
-  cidr_block = "10.0.${count.index}.0/24"
+  cidr_block        = "10.0.${count.index}.0/24"
 
   #Determines whether instances that are launched in this subnet receive a public IP address
   #If true, enables communication with the internet
@@ -108,7 +108,7 @@ resource "aws_subnet" "public_subnets" {
 resource "aws_subnet" "private_subnets" {
   count             = 3
   vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.${count.index + 3}.0/24"
+  cidr_block        = "10.0.${count.index+3}.0/24"
   availability_zone = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
@@ -126,7 +126,7 @@ resource "aws_route_table" "public_rt" {
 
   route {
     #CIDR block of 0.0.0.0/0 means all IP addresses are allowed (default gateway)
-    cidr_blocks = ["66.159.216.54/32", "2001:4860:7:633::fe/128"]
+    cidr_block= "66.159.216.54/32"
     #Connects the route table to the internet gateway
     gateway_id = aws_internet_gateway.igw.id
   }
@@ -203,3 +203,5 @@ resource "aws_instance" "public_instances" {
     Owner=var.owner
   }
 }
+
+//EKS CLUSTER
