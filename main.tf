@@ -12,13 +12,18 @@ provider "aws" {
 #Defining a owner variable that is used throughout the file in the tags
 variable "owner" {
   type        = string
-  default     = "Thomas Canning"
+  default     = "tcanning"
 }
 
 variable "name"{
     type        = string
-    default     = "Simple VPC"
+    default     = "simple-vpc-eks"
 
+}
+
+variable "vpc_cidr" {
+  type    = string
+  default = "10.0.0.0/16"
 }
 
 #Resources take a type as the 1st argument (corresponding to an AWS service) and a name to identify it as 2nd argument
@@ -39,7 +44,7 @@ resource "aws_vpc" "main" {
   #The first and last IP addresses are reserved for the network address and broadcast address, giving 254 usable IP addresses
   #Use a smaller prefix size for bigger VPCs
   #The other resources must use a CIDR block within the VPC's CIDR block range
-  cidr_block = "10.0.0.0/16"
+  cidr_block = var.vpc_cidr
 
   #Tags can be used for different things, such as:
   #Name tag for identification in the AWS console
@@ -49,7 +54,7 @@ resource "aws_vpc" "main" {
   #Environment tag, e.g. dev, test, prod
   tags = {
     Name  = var.name
-    Owner=var.owner
+    Owner= var.owner
   }
 }
 
@@ -58,7 +63,7 @@ resource "aws_vpc" "main" {
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id #This associates the internet gateway with the VPC
   tags = {
-    Name  = "${var.name} internet gateway" //The ${} syntax is used to interpolate variables
+    Name  = "${var.name}-internet-gateway" //The ${} syntax is used to interpolate variables
     Owner=var.owner
   }
 }
@@ -77,45 +82,54 @@ data "aws_availability_zones" "available" {}
 #An associated VPC
 #Public subnets have a route to the internet gateway
 resource "aws_subnet" "public_subnets" {
-  #Creates multiple instances of a resource. In this case, it's creating 3 subnets.
-  count = 3
 
-  #Associates the subnet with a specific VPC. Here, it's associated with the VPC created earlier.
+  #Creates 2 subnets
+  count = 2
+
+  # Associates the subnet with a specific VPC. Here, it's associated with the VPC created earlier.
   vpc_id = aws_vpc.main.id
 
-  #CIDR block specifies the range of internal IP addresses that can be used in the subnet.
-  #Uses the count.index to create a unique CIDR block for each subnet.
-  cidr_block        = "10.0.${count.index}.0/24"
+  # CIDR block specifies the range of internal IP addresses that can be used in the subnet.
+  # In this case 10.0.i.0 to 10.0.i.255
+  cidr_block = "10.0.${count.index}.0/24"
 
-  #Determines whether instances that are launched in this subnet receive a public IP address
-  #If true, enables communication with the internet
-  #This is what makes the subnet a public subnet
+  # Determines whether instances that are launched in this subnet receive a public IP address.
+  # If true, enables communication with the internet.
+  # This is what makes the subnet a public subnet.
   map_public_ip_on_launch = true
 
-  #Specifies which availability zone the subnet is created in
-  #An availability zone can be thought of like a specific data centre
-  #AZs are isolated locations, so if 1 fails, the others are unaffected
-  #Element function is used to loop through the list of availability zones and assign a different one to each subnet
-  #If there are more subnets than availability zones, it will loop back to the start of the list
+  # Specifies which availability zone the subnet is created in.
+  # Since only one subnet is created, we use the first availability zone from the list.
   availability_zone = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "${var.name} + public subnet ${count.index + 1}"
-    Owner=var.owner
+    Name  = "${var.name}-public-subnet-1-${count.index + 1}"
+    Owner = var.owner
   }
 }
 
-#Creates more subnets, this time map_public_ip_on_launch is omitted (default is false) to make the subnets private
 resource "aws_subnet" "private_subnets" {
-  count             = 3
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.${count.index+3}.0/24"
+  count=2
+  # Associates the subnet with a specific VPC. Here, it's associated with the VPC created earlier.
+  vpc_id = aws_vpc.main.id
+
+  cidr_block= "10.0.${count.index+3}.0/24"
+
+  # Specifies which availability zone the subnet is created in.
+  # Since only one subnet is created, we use the first availability zone from the list.
   availability_zone = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "${var.name}+ private subnet ${count.index + 1}"
-    Owner=var.owner
+    Name  = "${var.name}-private-subnet-${count.index + 1}"
+    Owner = var.owner
   }
+}
+
+resource "aws_route" "public_route" {
+  count = 2
+  route_table_id = aws_vpc.main.default_route_table_id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id = aws_nat_gateway.main[count.index].id
 }
 
 #Route tables determine where network traffic is directed
@@ -126,26 +140,42 @@ resource "aws_route_table" "public_rt" {
   vpc_id = aws_vpc.main.id
 
   route {
-    #CIDR block of 0.0.0.0/0 means all IP addresses are allowed (default gateway)
+    # Only allows routes from the VPN
     cidr_block= "66.159.216.54/32"
     #Connects the route table to the internet gateway
     gateway_id = aws_internet_gateway.igw.id
   }
 
     tags = {
-        Name = "${var.name} + public route table"
+        Name = "${var.name}-public-route-table"
         Owner=var.owner
     }
 }
 
 #This associates the public subnets with the route table which enables internet access
 resource "aws_route_table_association" "public_assoc" {
+  count          = 2
+
   #Count creates a separate route table association for each public subnet
-  count          = 3
   subnet_id      = aws_subnet.public_subnets[count.index].id
   route_table_id = aws_route_table.public_rt.id
 
-  //route table association doesn't support tagging
+  # Route table association doesn't support tagging
+}
+
+# Create Elastic IP
+# An EIP is a static, public IP address that can be allocated and associated with AWS resources such as NAT gateways
+resource "aws_eip" "main" {
+}
+
+# Create NAT Gateway
+resource "aws_nat_gateway" "main" {
+  count=2
+  allocation_id = aws_eip.main.id
+  subnet_id     = aws_subnet.public_subnets[count.index].id
+  tags = {
+    Name = "${var.name}-nat-gateway"
+  }
 }
 
 #Security groups act as a firewall
@@ -158,15 +188,31 @@ resource "aws_security_group" "public_sg" {
     from_port   = 22
     to_port     = 22
 
-    #TCP is a connection-oriented protocol (meaning requires a connection to be established before data is sent)
-    #TCP ensures all data is received and in the correct order
-    #An alternative is UDP, which is connectionless and doesn't guarantee data delivery
-    #But might be more suitable if speed is more important than reliability
+    # TCP is a connection-oriented protocol (meaning requires a connection to be established before data is sent)
+    # TCP ensures all data is received and in the correct order
+    # An alternative is UDP, which is connectionless and doesn't guarantee data delivery
+    # But might be more suitable if speed is more important than reliability
     protocol    = "tcp"
 
-    #CIDR block specifies the range of IP addresses that are allowed to access the instance
-    #The two IPs provided are the IPv4 and IPv6 addresses of the VPN
-    #This means only traffic from the VPN can access the instance
+    # CIDR block specifies the range of IP addresses that are allowed to access the instance
+    # The IP is the IP of the VPN
+    # This means only traffic from the VPN can access the instance
+    cidr_blocks = ["66.159.216.54/32"]
+  }
+
+  ingress{
+    # port 443 is HHTPS
+    from_port         = 443
+    to_port           = 443
+    protocol          = "tcp"
+    cidr_blocks = ["66.159.216.54/32"]
+  }
+
+  ingress{
+    # port 80 is HTTP
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
     cidr_blocks = ["66.159.216.54/32"]
   }
 
@@ -179,29 +225,71 @@ resource "aws_security_group" "public_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = {
-    Name  = "${var.name} public security group"
+    Name  = "${var.name}-public-security-group"
     Owner = var.owner
   }
 }
 
-#An AWS instance is a virtual server in the cloud
-resource "aws_instance" "public_instances" {
-  count         = 3
-
-  #AMI (Amazon Machine Image) is a template for the root volume of an instance
-  #It contains the operating system, application server, and applications, in this case a Linux image
-  #The key comes from the AWS console
-  ami           = "ami-055d97d06f911e2b9"
-
-  #Instance type determines the hardware of the host computer used for the instance
-  #T2.micro is a cheap instance type with a small amount of CPU and memory
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.public_subnets[count.index].id
-  vpc_security_group_ids = [aws_security_group.public_sg.id]
+# Security group for data plane
+#Data plane is for communicaation between nodes
+resource "aws_security_group" "data_plane_sg" {
+  name   = "k8s-data-plane-sg"
+  vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "${var.name}+ public instance ${count.index + 1}"
-    Owner=var.owner
+    Name = "${var.name}-data-plane-sg"
+  }
+
+  #Port 0 to 65535 means all ports are allowed
+  ingress {
+    description     = "Allow nodes to communicate with each other"
+    from_port       = 0
+    to_port         = 65535
+    protocol        = "-1"
+    cidr_blocks = concat(
+      aws_subnet.private_subnets[*].cidr_block,
+      aws_subnet.public_subnets[*].cidr_block
+    )
   }
 }
 
+## Egress rule
+resource "aws_security_group_rule" "node_outbound" {
+  security_group_id = aws_security_group.data_plane_sg.id
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["0.0.0.0/0"]
+}
+
+# Security group for control plane
+resource "aws_security_group" "control_plane_sg" {
+  name   = "${var.name}-control-plane-sg"
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "${var.name}-control-plane-sg"
+  }
+}
+
+# Security group traffic rules
+## Ingress rule
+resource "aws_security_group_rule" "control_plane_inbound" {
+  security_group_id = aws_security_group.control_plane_sg.id
+  type              = "ingress"
+  from_port         = 0
+  to_port           = 65535
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+}
+
+## Egress rule
+resource "aws_security_group_rule" "control_plane_outbound" {
+  security_group_id = aws_security_group.control_plane_sg.id
+  type              = "egress"
+  from_port         = 0
+  to_port           = 65535
+  protocol          = "-1"
+  cidr_blocks       = ["0.0.0.0/0"]
+}
