@@ -5,7 +5,7 @@ provider "aws" {
   #There are currently 33 regions.
   #Its best to choose the region closest to the end users to reduce latency, or use multiple regions if global user base
   #Another factor is some regions are cheaper than others
-  region = "us-west-2" #This is the London region
+  region = "eu-west-2" #This is the London region
   profile = "cc-devel-1/nonprod-administrator" #This is the profile name in the AWS credentials file
 }
 
@@ -30,16 +30,17 @@ resource "aws_vpc" "main" {
   #The value includes an IP address and a prefix size
   #IP address is of format x.x.x.x and represents the start of the ip address range
   #There are specific ranges of IP addresses that can be used for private networks, e.g. 10.0.0.0
-  #The prefix size, in this case 24, specifies how many bits are used for the network portion of the address (subnet mask)
-  #This means 24 bits are used to identify the network
+  #The prefix size, in this case 16, specifies how many bits are used for the network portion of the address (subnet mask)
+  #This means 16 bits are used to identify the network
   #The remaining bits (32-n) are used for the host address
   #So increasing prefix size decreases the number of available IP addresses
   #10.0.0.0/16 allows for 65,536 IP addresses
   #The range starts at 10.0.0.0 and ends at 10.0.255.255
   #The first and last IP addresses are reserved for the network address and broadcast address, giving 254 usable IP addresses
   #Use a smaller prefix size for bigger VPCs
-
+  #The other resources must use a CIDR block within the VPC's CIDR block range
   cidr_block = "10.0.0.0/16"
+
   #Tags can be used for different things, such as:
   #Name tag for identification in the AWS console
   #Owner tag
@@ -190,7 +191,7 @@ resource "aws_instance" "public_instances" {
   #AMI (Amazon Machine Image) is a template for the root volume of an instance
   #It contains the operating system, application server, and applications, in this case a Linux image
   #The key comes from the AWS console
-  ami           = "ami-0c36451c41e1eefd2"
+  ami           = "ami-055d97d06f911e2b9"
 
   #Instance type determines the hardware of the host computer used for the instance
   #T2.micro is a cheap instance type with a small amount of CPU and memory
