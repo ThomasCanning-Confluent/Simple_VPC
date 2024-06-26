@@ -162,7 +162,7 @@ resource "aws_route_table_association" "public_assoc" {
 
   #Count creates a separate route table association for each public subnet
   subnet_id      = aws_subnet.public_subnets[count.index].id
-  route_table_id = aws_route_table.public_rt.id
+  route_table_id = aws_vpc.main.default_route_table_id
 
   # Route table association doesn't support tagging
 }
@@ -177,9 +177,10 @@ resource "aws_eip" "main" {
 
 # Create NAT Gateway
 resource "aws_nat_gateway" "main" {
-  count=2
-  allocation_id = aws_eip.main[count.index].id
-  subnet_id     = aws_subnet.public_subnets[count.index].id
+  count           = 2  # Define two NAT Gateways
+  allocation_id   = aws_eip.main[count.index].id  # Use corresponding Elastic IP for each NAT Gateway
+  subnet_id       = aws_subnet.public_subnets[count.index].id  # Associate each NAT Gateway with a public subnet
+
   tags = {
     Name = "${var.name}-nat-gateway-${count.index + 1}"
   }
