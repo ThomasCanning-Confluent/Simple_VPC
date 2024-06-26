@@ -56,6 +56,10 @@ resource "aws_vpc" "main" {
     Name  = var.name
     Owner= var.owner
   }
+
+  #setting dns options
+  enable_dns_hostnames = true
+  enable_dns_support   = true
 }
 
 #Internet gateway allows instances in the public subnet to connect to the internet.
@@ -166,15 +170,18 @@ resource "aws_route_table_association" "public_assoc" {
 # Create Elastic IP
 # An EIP is a static, public IP address that can be allocated and associated with AWS resources such as NAT gateways
 resource "aws_eip" "main" {
+  count = 2
+    vpc = true
 }
+
 
 # Create NAT Gateway
 resource "aws_nat_gateway" "main" {
   count=2
-  allocation_id = aws_eip.main.id
+  allocation_id = aws_eip.main[count.index].id
   subnet_id     = aws_subnet.public_subnets[count.index].id
   tags = {
-    Name = "${var.name}-nat-gateway"
+    Name = "${var.name}-nat-gateway-${count.index + 1}"
   }
 }
 
@@ -233,7 +240,7 @@ resource "aws_security_group" "public_sg" {
 # Security group for data plane
 #Data plane is for communicaation between nodes
 resource "aws_security_group" "data_plane_sg" {
-  name   = "k8s-data-plane-sg"
+  name   = "${var.name}-data-plane-sg"
   vpc_id = aws_vpc.main.id
 
   tags = {
@@ -245,7 +252,7 @@ resource "aws_security_group" "data_plane_sg" {
     description     = "Allow nodes to communicate with each other"
     from_port       = 0
     to_port         = 65535
-    protocol        = "-1"
+    protocol        = "tcp"
     cidr_blocks = concat(
       aws_subnet.private_subnets[*].cidr_block,
       aws_subnet.public_subnets[*].cidr_block
